@@ -1,14 +1,17 @@
 from datetime import datetime
 import tkinter as tk
 from tkinter import messagebox
+# pip install windnd
 from windnd import hook_dropfiles
 import random
+# pip install pycryptodome
 from Crypto.PublicKey import RSA
 from Crypto import Random
 from Crypto.Hash import SHA384
 from Crypto.Signature import PKCS1_v1_5 as PKCS1_signature
 import os
 import base64
+# pip install pyperclip
 import pyperclip
 import re
 
