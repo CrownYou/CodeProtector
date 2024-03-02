@@ -22,7 +22,7 @@ activate_window = tk.Tk()
 activate_window.title('软件保护工具')
 activate_window.geometry("404x414")
 colors = ['blue', 'red', 'black', 'green', 'purple', 'orange']
-ind = 0
+ind, interval = 0, 25
 frm = tk.Frame(activate_window)
 frm.pack()
 
@@ -568,49 +568,28 @@ from threading import Thread''')
     label5.pack()
 
 
-interval = 25
-
-
 def intro_pack_main():
     clean_all_widget(frm)
-    label1 = tk.Label(frm, text='源码加壳介绍', font=mid_font)
-    label1.place(x=200, y=10, anchor='center')
-    label2 = tk.Label(frm, text='该功能是在原文件的基础上增加一个启动文件', font=mid_font)
-    label2.place(x=10, y=10 + interval * 1, anchor='nw')
-    label9 = tk.Label(frm, text="该启动文件具有一机一码的授权激活功能。", font=mid_font)
-    label9.place(x=10, y=10 + interval * 2, anchor='nw')
-    label3 = tk.Label(frm, text='此外，你还可以选择将原文件进行Cython编译', font=mid_font)
-    label3.place(x=10, y=10 + interval * 3, anchor='nw')
-    label4 = tk.Label(frm, text="如此，该原文件会变得运行更快且更难破解。", font=mid_font)
-    label4.place(x=10, y=10 + interval * 4, anchor='nw')
-    label5 = tk.Label(frm, text="不过，你需要在编译前，安装Cython库，", font=mid_font)
-    label5.place(x=10, y=10 + interval * 6, anchor='nw')
-    label6 = tk.Label(frm, text="方法为：打开cmd，", font=mid_font)
-    label6.place(x=10, y=10 + interval * 7, anchor='nw')
-    label7 = tk.Label(frm, text="输入 pip install Cython 即可。", font=mid_font)
-    label7.place(x=10, y=10 + interval * 8, anchor='nw')
-    label8 = tk.Label(frm, text="(end)", font=mid_font)
-    label8.place(x=10, y=10 + interval * 9, anchor='nw')
+    text = tk.Text(frm, width=43, height=23, font=mid_font)
+    text.pack()
+    word = '''    源码加壳介绍
+
+该功能是在原文件的基础上增加一个启动文件，该启动文件具有一机一码的授权激活功能。
+
+此外，你还可以选择将原文件进行Cython编译，如此，该原文件会变得运行更快且更难破解。不过，你需要在编译前，安装Cython库，方法为：打开cmd，输入 pip install Cython 即可。'''
+    text.insert('end', word)
 
 
 def intro_activation():
     clean_all_widget(frm)
-    label1 = tk.Label(frm, text='激活软件介绍', font=mid_font)
-    label1.place(x=200, y=10, anchor='center')
-    label2 = tk.Label(frm, text='该功能够让你帮助客户激活软件，', font=mid_font)
-    label2.place(x=10, y=10 + interval * 1, anchor='nw')
-    label3 = tk.Label(frm, text='并设置用户的激活时间。', font=mid_font)
-    label3.place(x=10, y=10 + interval * 2, anchor='nw')
-    label4 = tk.Label(frm, text='注意，用于激活的私钥，', font=mid_font)
-    label4.place(x=10, y=10 + interval * 4, anchor='nw')
-    label5 = tk.Label(frm, text='必须和打包时用的公钥配对，', font=mid_font)
-    label5.place(x=10, y=10 + interval * 5, anchor='nw')
-    label6 = tk.Label(frm, text='否则无法激活。', font=mid_font)
-    label6.place(x=10, y=10 + interval * 6, anchor='nw')
-    label7 = tk.Label(frm, text='你可以在“创建RSA密钥”处创建RSA密钥对。', font=mid_font)
-    label7.place(x=10, y=10 + interval * 8, anchor='nw')
-    label8 = tk.Label(frm, text='(end)', font=mid_font)
-    label8.place(x=10, y=10 + interval * 9, anchor='nw')
+    text = tk.Text(frm, width=43, height=23, font=mid_font)
+    text.pack()
+    word = '''    激活软件介绍
+
+该功能够让你帮助客户激活软件，并设置用户的激活时间。注意，用于激活的私钥，必须和打包时用的公钥配对，否则无法激活。
+
+你可以在“创建RSA密钥”处创建RSA密钥对。'''
+    text.insert('end', word)
 
 
 menubar = tk.Menu(activate_window)
