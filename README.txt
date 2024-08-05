@@ -2,9 +2,12 @@
 
 技术原理是对用户的硬件信息进行数字签名，用户每次运行前，都需要对硬件信息和签名进行校对，如果一致才能启动软件。
 
-软件使用了tkinter制作的图形化界面。
-
 功能包括生成RSA密钥；管理员激活用户；给python源码加壳（可选是否用cython编译源码）
+
+软件使用了tkinter制作的图形化界面，您不仅可以通过图形化界面来给用户激活软件，您也可以通过cmd指令来自动化给用户激活软件。具体使用方法请参考activate.py中的注释。
+
+使用前的环境配置方法：
+pip install -r requirement.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 注意：软件只能给python源代码加壳。其他的事项打开软件运行一下就知道啦。
 

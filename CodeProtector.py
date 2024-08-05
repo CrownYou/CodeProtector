@@ -1,3 +1,4 @@
+import shutil
 from datetime import datetime
 import tkinter as tk
 from tkinter import messagebox
@@ -191,7 +192,7 @@ def activation():
 
     frm1 = tk.Frame(frm)
     frm1.pack()
-    label1 = tk.Label(frm1, text='请输入私钥所在的绝对路径：', font=mid_font)
+    label1 = tk.Label(frm1, text='请拖入私钥或输入地址：', font=mid_font)
     label1.grid(row=1, column=1, padx=5)
     var1 = tk.StringVar()
     var1.set('0')
@@ -272,7 +273,7 @@ def pack_main():
             messagebox.showerror('路径错误', '主程序的路径不存在')
             return 0
 
-        # 再把start.py写入主程序所在文件夹中的start.py
+        # 再把壳文件写入主程序所在文件夹中的start.py
         dir_of_main_py = os.path.dirname(main_path)
         # 下面是start.py的源码（不包含头部的调用库）
         start_code = r'''
@@ -389,7 +390,7 @@ try:
                 prompt_window.destroy()
                 import demonstration
 
-            def on_closing():
+            def when_closing():
                 prompt_window.destroy()
                 import demonstration
 
@@ -398,7 +399,7 @@ try:
             button2 = tk.Button(frm1, text='暂不续费', font=mid_font, command=not_yet)
             button2.grid(row=1, column=2, padx=10)
 
-            prompt_window.protocol("WM_DELETE_WINDOW", on_closing)
+            prompt_window.protocol("WM_DELETE_WINDOW", when_closing)
             prompt_window.mainloop()
 
         elif eval(activation_code["有效期限"].rstrip('天')) - (datetime.now() - datetime.strptime(activation_code['激活时间'], "%Y-%m-%d %H:%M:%S.%f")).days < 0:
@@ -428,6 +429,7 @@ except Exception:  # 上面的任何一个环节报错都会要求重新激活
     login()
 '''
 
+        # 这里获取管理员的公钥，并把壳文件中缺少的关键信息补充完整
         pubkey_path = entry1.get().strip().strip('\"').lstrip('“').rstrip('”')
         if os.path.exists(pubkey_path) and '.pem' in pubkey_path:
             with open(pubkey_path, 'rb') as infile, open(f'{dir_of_main_py}\\start.py', 'w', encoding='utf-8') as outfile:
@@ -456,7 +458,7 @@ import pyperclip'''
                         else:
                             res_of_environment_of_main.append(main_items)  # 跟start调用不一样的库才用写入
                 outfile.write('\n'.join(res_of_environment_of_main))
-                # 写完主程序需要的库后，再写启动程序需要的库
+                # 写完主程序需要的库后，再写壳文件需要的库
                 outfile.write(environment_of_start)
                 outfile.write(f"\n\n\npubkey_bytes = {str(infile.read())}\n")
                 outfile.write(f"contact = \"{entry3.get()}\"\n")
@@ -475,7 +477,7 @@ import pyperclip'''
         text2.pack()
         activate_window.update()
 
-        # 再用 cython 把 py 文件编译成 pyd
+        # 如果用户选择cython编译，就把主程序编译成 pyd
         if choice_of_cython.get() == '1':
             text2.insert('end', f'正在使用 Cython 编译 {os.path.basename(main_path)}...\n\n')
             activate_window.update()
@@ -490,66 +492,77 @@ setup(ext_modules=cythonize(["demonstration.py"]))  # 这里填要设置的文�
                 print(res)
                 pyd_path = re.findall('/OUT:.+?\.pyd', res)[0][5:]
             except Exception:
-                text2.insert('end', 'Cython 编译结果读取失败，程序结束。')
-                label5.config(text='')
+                os.remove('temp_setup.py') if os.path.exists('temp_setup.py') else ...
+                os.remove("demonstration.py") if os.path.exists("demonstration.py") else ...
+                os.remove("demonstration.c") if os.path.exists("demonstration.c") else ...
+                shutil.rmtree('build') if os.path.exists('build') else ...
+                label5.config(text='请按提示手动完成编译')
+                text2.insert('end', f'''Cython 编译结果读取失败，程序结束。可能是环境配置问题，或者您的主程序存在错误。
+
+但目前已生成了壳程序start.py，当前壳文件放在主程序所在的文件夹中，接下来您可以根据下面的提示手动编译主程序：
+1. 确保你已经完成了pip install cython，并且电脑上已经安装了C编译器，如Visual Studio。
+2. 创建一个cythonize.py文件，内部代码如下：
+from distutils.core import setup  # 这个库在python3.12中被删除，所以请用python3.12以下的版本
+from Cython.Build import cythonize  # pip install cython
+
+setup(ext_modules=cythonize(['aaa.py', 'bbb.py']))  # 这里填主程序的文件名称，方括号里可以放一个或多个文件名
+# 之后打开cmd运行下面的代码：#### 特别注意：是在cmd里运行，不是用python解释器运行
+# cd （此处填cythonize.py所在的文件夹路径）  # 进入当前目录，cd就是change directory（改变目录）的意思
+# python cythonize.py build_ext  # 运行程序
+
+3. 根据上面代码中的注释进行编译，将编译后的结果重命名为：demonstration.pyd，然后保持其与壳程序（start.py）的相对位置不变。''')
                 return 0
             # cython 编译结果被正确读取，且正则找到pyd的路径后，才继续
             text2.insert('end', res)
             text2.insert('end', f'''\nCython 编译主程序已完成，
-{os.path.basename(main_path)} 的 pyd 文件保存在源码所在目录下，
+主程序 {os.path.basename(main_path)} 的 pyd 文件保存在主程序所在目录下，
 即“{dir_of_main_py}”文件夹中的 {os.path.basename(pyd_path)} 文件。''')
             activate_window.update()
             with open(pyd_path, 'rb') as infile, open(f'{dir_of_main_py}\\{os.path.basename(pyd_path)}', 'wb') as outfile:
                 outfile.write(infile.read())
-            os.remove("demonstration.py")
-            os.remove("temp_setup.py")
-            os.remove(pyd_path)
+            os.remove('temp_setup.py') if os.path.exists('temp_setup.py') else ...
+            os.remove("demonstration.py") if os.path.exists("demonstration.py") else ...
+            os.remove("demonstration.c") if os.path.exists("demonstration.c") else ...
+            os.remove(pyd_path) if os.path.exists(pyd_path) else ...
+            shutil.rmtree('build') if os.path.exists('build') else ...
+        # 如果用户不需要用cython编译，就把主程序改名为demonstration.py让壳文件调用
         else:
             with open('demonstration.py', 'r', encoding='utf-8') as infile, open(f'{dir_of_main_py}\\demonstration.py', 'w', encoding='utf-8') as outfile:
                 outfile.write(infile.read())
             text2.insert('end', f'''主程序的源码被复制了一份至主程序所在文件夹下，
 即“{dir_of_main_py}”文件夹中的 demonstration.py 文件，
-目的是为了让启动程序调用这个 demonstration.py 文件''')
+目的是为了让壳程序调用这个 demonstration.py 文件''')
 
-        text2.insert('end', f'''\n\n主程序的启动文件已经生成完成，启动文件保存在源码所在目录下，
+        text2.insert('end', f'''\n\n主程序的壳文件已经生成完成，壳文件保存在主程序所在目录下，
 即“{dir_of_main_py}”文件夹中的 start.py 文件。\n
-注意：启动文件的运行依赖于主程序（原始的py文件或pyd文件都行），两个文件要放于同一目录下。''')
-        label5.config(text='加壳完毕，结果保存在源码目录下')
+注意：壳文件的运行依赖于主程序（原始的py文件或pyd文件都行），两个文件要放于同一目录下。''')
+        label5.config(text='加壳完毕，结果保存在主程序目录下')
 
-    label1 = tk.Label(frm, text='请输入管理员公钥所在的绝对路径：', font=mid_font)
+    label1 = tk.Label(frm, text='请拖入管理员的公钥或输入地址：', font=mid_font)
     label1.pack()
     entry1 = tk.Entry(frm, font=mid_font, width=44)
     entry1.pack()
     hook_dropfiles(entry1, func=drag1)
-    label2 = tk.Label(frm, text='请输入源码文件的绝对路径：', font=mid_font)
+    label2 = tk.Label(frm, text='请拖入主程序文件或输入地址：', font=mid_font)
     label2.pack()
     entry2 = tk.Entry(frm, width=44, font=mid_font)
     entry2.pack()
     entry2.bind('<KeyRelease>', read_environment_of_entry2)
     hook_dropfiles(entry2, func=drag2)
-    label3 = tk.Label(frm, text='请按照示例写入源码调用的所有环境：', font=mid_font)
+    label3 = tk.Label(frm, text='请按照示例写入主程序调用的所有环境：', font=mid_font)
     label3.pack()
     text1 = tk.Text(frm, width=44, height=9, font=mid_font)
     text1.pack()
-    text1.insert(1.0, '''import binascii
+    text1.insert(1.0, '''\'\'\'注意：主程序中不要有“if __name__ == __main__:”语句，否则壳程序调用主程序时可能失败\'\'\'
+import binascii
 import hashlib
-import random
-import os
-import re
 import shutil
-from math import ceil
-import zlib
-from random import randint
 from tkinter import messagebox
 from tkinter import ttk
 from Crypto import Random
 from Crypto.Hash import MD4
 from Crypto.Hash import RIPEMD160
-from Crypto.Cipher import PKCS1_v1_5 as PKCS1_cipher
-from Crypto.Cipher import AES
-from windnd import hook_dropfiles
-from pynput import keyboard
-from threading import Thread''')
+from Crypto.Cipher import PKCS1_v1_5 as PKCS1_cipher''')
     label4 = tk.Label(frm, text='请输入客户联系您的方式：', font=mid_font)
     label4.pack()
     entry3 = tk.Entry(frm, width=44, font=mid_font)
@@ -562,7 +575,7 @@ from threading import Thread''')
     button2.grid(row=1, column=2, padx=10)
     choice_of_cython = tk.StringVar()
     choice_of_cython.set('0')
-    cb1 = tk.Checkbutton(frm1, text='使用Cython编译原文件', variable=choice_of_cython, onvalue='1', offvalue='0', font=font)
+    cb1 = tk.Checkbutton(frm1, text='使用Cython编译主程序', variable=choice_of_cython, onvalue='1', offvalue='0', font=font)
     cb1.grid(row=1, column=3, padx=10)
     label5 = tk.Label(frm, text='', font=mid_font)
     label5.pack()
@@ -574,9 +587,12 @@ def intro_pack_main():
     text.pack()
     word = '''    源码加壳介绍
 
-该功能是在原文件的基础上增加一个启动文件，该启动文件具有一机一码的授权激活功能。
+该功能是在主程序的基础上增加一个壳文件，该壳文件具有一机一码的授权激活功能。
 
-此外，你还可以选择将原文件进行Cython编译，如此，该原文件会变得运行更快且更难破解。不过，你需要在编译前，安装Cython库，方法为：打开cmd，输入 pip install Cython 即可。'''
+此外，你还可以选择将原文件进行Cython编译，如此，该原文件会变得运行更快且更难破解。不过，你需要在编译前做以下准备：
+1. 安装Cython库，方法为：打开cmd，输入：pip install Cython
+2. 在电脑上安装C语言编译器，如Visual Studio。
+加壳完成后，只需要将壳文件打包成exe，就可以发送给客户使用了。'''
     text.insert('end', word)
 
 
@@ -587,6 +603,8 @@ def intro_activation():
     word = '''    激活软件介绍
 
 该功能够让你帮助客户激活软件，并设置用户的激活时间。注意，用于激活的私钥，必须和打包时用的公钥配对，否则无法激活。
+
+您除了在图形化界面中激活用户软件，还可以在cmd中调用activate.py来实现自动化激活用户软件，具体用法请参考activate.py中的注释。
 
 你可以在“创建RSA密钥”处创建RSA密钥对。'''
     text.insert('end', word)
