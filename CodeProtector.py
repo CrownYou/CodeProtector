@@ -1,4 +1,5 @@
 import shutil
+import binascii
 from datetime import datetime
 import tkinter as tk
 from tkinter import messagebox
@@ -251,12 +252,16 @@ def pack_main():
                         pass
                     else:
                         break
+        reset(name_entry)
+        name_entry.insert('end', os.path.splitext(os.path.basename(path))[0])
 
     def drag2(files):
         dragged_files(files, entry2)
         read_environment_of_entry2()
 
     def _reset():
+        reset(entry2)
+        reset(name_entry)
         reset(text1)
 
     def process():
@@ -279,10 +284,9 @@ def pack_main():
         start_code = r'''
 pubkey_verifier = PKCS1_signature.new(RSA.importKey(pubkey_bytes))
 c = wmi.WMI()
-# 获取CPU序列号
+# 获取CPU序列号，并把软件名的哈希值加到后面，这样可以让一台电脑的不同软件使用不同的激活码
 for index, cpu in enumerate(c.Win32_Processor()):
-    cpu_id = cpu.ProcessorId.strip()
-# 本机 id: BFEBFBFF000806EC
+    cpu_id = cpu.ProcessorId.strip() + software_name_hash
 
 
 def login():
@@ -334,8 +338,8 @@ def login():
     frm1.pack()
     label5 = tk.Label(frm1, font=mid_font, text='身份标识符：')
     label5.grid(row=1, column=1)
-    entry1 = tk.Entry(frm1, font=mid_font)
-    entry1.grid(row=1, column=2, padx=10)
+    entry1 = tk.Entry(frm1, font=mid_font, width=24)
+    entry1.grid(row=1, column=2)
     entry1.insert(0, cpu_id)
     entry1.config(state='readonly')
     button1 = tk.Button(frm1, text='复制', fg=colors[ind], command=copy, font=mid_font)
@@ -462,7 +466,8 @@ import pyperclip'''
                 outfile.write(environment_of_start)
                 outfile.write(f"\n\n\npubkey_bytes = {str(infile.read())}\n")
                 outfile.write(f"contact = \"{entry3.get()}\"\n")
-                width_and_height = "404x320" if 'pyautogui' not in text1.get(1.0, 'end') else "606x480"
+                outfile.write(f'''software_name_hash = \"{str(hex(binascii.crc32(bytes(name_entry.get().encode("GBK"))))).lstrip("0x")}\"\n''')
+                width_and_height = "490x330" if 'pyautogui' not in text1.get(1.0, 'end') else "735x495"
                 outfile.write(f"width_and_height = \"{width_and_height}\"")
                 outfile.write(start_code)
         else:
@@ -521,7 +526,6 @@ setup(ext_modules=cythonize(['aaa.py', 'bbb.py']))  # 这里填主程序的文�
             with open(pyd_path, 'rb') as infile, open(f'{dir_of_main_py}\\{os.path.basename(pyd_path)}', 'wb') as outfile:
                 outfile.write(infile.read())
             os.remove('temp_setup.py') if os.path.exists('temp_setup.py') else ...
-            os.remove("demonstration.py") if os.path.exists("demonstration.py") else ...
             os.remove("demonstration.c") if os.path.exists("demonstration.c") else ...
             os.remove(pyd_path) if os.path.exists(pyd_path) else ...
             shutil.rmtree('build') if os.path.exists('build') else ...
@@ -532,6 +536,8 @@ setup(ext_modules=cythonize(['aaa.py', 'bbb.py']))  # 这里填主程序的文�
             text2.insert('end', f'''主程序的源码被复制了一份至主程序所在文件夹下，
 即“{dir_of_main_py}”文件夹中的 demonstration.py 文件，
 目的是为了让壳程序调用这个 demonstration.py 文件''')
+
+        os.remove("demonstration.py") if os.path.exists("demonstration.py") else ...
 
         text2.insert('end', f'''\n\n主程序的壳文件已经生成完成，壳文件保存在主程序所在目录下，
 即“{dir_of_main_py}”文件夹中的 start.py 文件。\n
@@ -549,9 +555,14 @@ setup(ext_modules=cythonize(['aaa.py', 'bbb.py']))  # 这里填主程序的文�
     entry2.pack()
     entry2.bind('<KeyRelease>', read_environment_of_entry2)
     hook_dropfiles(entry2, func=drag2)
+    name_label = tk.Label(frm, text='请输入软件的名称：', font=mid_font)
+    name_label.pack()
+    name_entry = tk.Entry(frm, width=44, font=mid_font)
+    name_entry.pack()
+    name_entry.insert('end', '可使一台电脑上的不同程序使用不同的激活码')
     label3 = tk.Label(frm, text='请按照示例写入主程序调用的所有环境：', font=mid_font)
     label3.pack()
-    text1 = tk.Text(frm, width=44, height=9, font=mid_font)
+    text1 = tk.Text(frm, width=44, height=7, font=mid_font)
     text1.pack()
     text1.insert(1.0, '''\'\'\'注意：主程序中不要有“if __name__ == __main__:”语句，否则壳程序调用主程序时可能失败\'\'\'
 import binascii
@@ -569,7 +580,7 @@ from Crypto.Cipher import PKCS1_v1_5 as PKCS1_cipher''')
     entry3.pack()
     frm1 = tk.Frame(frm)
     frm1.pack()
-    button1 = tk.Button(frm1, text='清空环境', font=mid_font, command=_reset)
+    button1 = tk.Button(frm1, text='重选软件', font=mid_font, command=_reset)
     button1.grid(row=1, column=1, padx=10)
     button2 = tk.Button(frm1, text='开始加壳', font=mid_font, command=process)
     button2.grid(row=1, column=2, padx=10)
@@ -585,7 +596,7 @@ def intro_pack_main():
     clean_all_widget(frm)
     text = tk.Text(frm, width=43, height=23, font=mid_font)
     text.pack()
-    word = '''    源码加壳介绍
+    word = '''    主程序加壳介绍
 
 该功能是在主程序的基础上增加一个壳文件，该壳文件具有一机一码的授权激活功能。
 
@@ -620,16 +631,16 @@ rsa_menu.add_command(label='随机生成2048位', command=create_rsa_key_2048, f
 rsa_menu.add_command(label='随机生成3072位', command=create_rsa_key_3072, font=font)
 rsa_menu.add_command(label='随机生成4096位', command=create_rsa_key_4096, font=font)
 
-'''打包源码部分'''
-menubar.add_command(label='源码加壳', command=pack_main)
+'''主程序部分'''
+menubar.add_command(label='主程序加壳', command=pack_main)
 
 '''激活软件部分'''
-menubar.add_command(label='激活软件', command=activation)
+menubar.add_command(label='激活程序', command=activation)
 
 '''帮助部分'''
 intro_menu = tk.Menu(menubar, tearoff=0)
 menubar.add_cascade(label='帮助', menu=intro_menu)
-intro_menu.add_command(label='源码加壳介绍', command=intro_pack_main, font=font)
+intro_menu.add_command(label='主程序加壳介绍', command=intro_pack_main, font=font)
 intro_menu.add_command(label='激活软件介绍', command=intro_activation, font=font)
 
 activate_window.config(menu=menubar)
