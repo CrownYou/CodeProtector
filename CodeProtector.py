@@ -525,7 +525,7 @@ setup(ext_modules=cythonize(['aaa.py', 'bbb.py']))  # 这里填主程序的文�
             activate_window.update()
             with open(pyd_path, 'rb') as infile, open(f'{dir_of_main_py}\\{os.path.basename(pyd_path)}', 'wb') as outfile:
                 outfile.write(infile.read())
-            os.remove('temp_setup.py') if os.path.exists('temp_setup.py') else ...
+            # os.remove('temp_setup.py') if os.path.exists('temp_setup.py') else ...  # 不删这个是万一有人需要用
             os.remove("demonstration.c") if os.path.exists("demonstration.c") else ...
             os.remove(pyd_path) if os.path.exists(pyd_path) else ...
             shutil.rmtree('build') if os.path.exists('build') else ...
@@ -537,7 +537,7 @@ setup(ext_modules=cythonize(['aaa.py', 'bbb.py']))  # 这里填主程序的文�
 即“{dir_of_main_py}”文件夹中的 demonstration.py 文件，
 目的是为了让壳程序调用这个 demonstration.py 文件''')
 
-        os.remove("demonstration.py") if os.path.exists("demonstration.py") else ...
+        # os.remove("demonstration.py") if os.path.exists("demonstration.py") else ...  # 不删这个是万一有人需要用
 
         text2.insert('end', f'''\n\n主程序的壳文件已经生成完成，壳文件保存在主程序所在目录下，
 即“{dir_of_main_py}”文件夹中的 start.py 文件。\n
