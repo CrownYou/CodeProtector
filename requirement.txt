@@ -2,3 +2,4 @@ windnd==1.0.7
 pycryptodome==3.14.1
 pyperclip==1.8.2
 cython==0.29.32
+wmi==1.5.1
